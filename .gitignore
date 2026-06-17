@@ -1,0 +1,42 @@
+# ── Python / ML env ──────────────────────────────────────────────
+.venv/
+**/.venv/
+venv/
+__pycache__/
+*.pyc
+
+# Local agent/editor config
+.claude/
+
+# ── Large datasets & generated ML artifacts (NOT source) ─────────
+# Re-creatable: download LaboroTomato, re-extract crops, re-run reports.
+ml/data/
+ml/training_pull/
+ml/cls_ds/
+ml/cls_ds_bal/
+ml/seg_ds/
+ml/yolo_ds/
+ml/runs/
+ml/report/
+ml/report.zip
+*.depth
+
+# Pretrained weights auto-downloaded by Ultralytics
+yolov8n*.pt
+ml/yolov8n*.pt
+
+# ── Xcode ────────────────────────────────────────────────────────
+# The .xcodeproj is generated from project.yml by XcodeGen — don't commit it.
+TomatoBreeder.xcodeproj/
+build/
+DerivedData/
+*.xcuserstate
+**/xcuserdata/
+.DS_Store
+
+# Local-only training photos pulled from a device (your research data)
+training_pull/
+
+# Kept ON PURPOSE (do not ignore): the two trained models the app needs —
+#   TomatoBreeder/TomatoShapeNet.mlpackage         (shape classifier)
+#   TomatoBreeder/Models/TomatoSegmenter.mlpackage (fruit detector)

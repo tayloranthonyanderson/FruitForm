@@ -1,0 +1,12 @@
+# Python 3.9+ (tested on macOS arm64 / Apple Silicon, Python 3.9.6).
+# Create + install:
+#   python3 -m venv ml/.venv && source ml/.venv/bin/activate
+#   pip install -r ml/requirements.txt
+#
+# These versions are what trained the shipped models (MPS works for cls training).
+ultralytics==8.4.68
+torch==2.8.0
+torchvision==0.23.0
+coremltools==9.0
+pillow==11.3.0
+numpy==2.0.2
