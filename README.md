@@ -49,6 +49,8 @@ ml/                       Python training pipeline (see ml/ below)
 
 ## Build & run on a phone
 
+> New here? **[INSTALL.md](INSTALL.md)** has the full clone-to-phone walkthrough.
+
 Requires **Xcode 26+**, **[XcodeGen]**, and a **LiDAR iPhone** (12 Pro or newer Pro).
 
 ```bash
