@@ -28,6 +28,8 @@ struct FruitMeasurement: Identifiable, Codable, Hashable {
     var solidity: Double?          // area / convex-hull area; lower = more ribbed/lobed
     var shapeCategory: String?     // round, oval, plum, oxheart, ribbed, ...
     var classifierConfidence: Double?
+    var shapeRating: Int?          // fruit_shape_rating trait: 1 (ideal) … 9 (cull)
+    var shapeRatingConfidence: Double?
     var note: String?
     
     // --- Color ---

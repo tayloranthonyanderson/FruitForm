@@ -59,6 +59,16 @@ struct CaptureView: View {
                 .foregroundStyle(.white)
                 .shadow(radius: 2)
 
+            Toggle(isOn: $controller.previewData) {
+                Label("Preview data (quick-look shape + rating per fruit)",
+                      systemImage: "wand.and.stars")
+                    .font(.caption.weight(.medium))
+            }
+            .toggleStyle(.switch)
+            .tint(.green)
+            .padding(.horizontal, 10).padding(.vertical, 6)
+            .background(.ultraThinMaterial, in: RoundedRectangle(cornerRadius: 10))
+
             if !controller.lidarAvailable {
                 Label("No LiDAR on this device — shape is measured, but absolute size (cm) is unavailable.",
                       systemImage: "exclamationmark.triangle.fill")

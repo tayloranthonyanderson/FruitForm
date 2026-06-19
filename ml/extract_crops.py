@@ -22,10 +22,12 @@ from ultralytics import YOLO
 ap = argparse.ArgumentParser()
 ap.add_argument("--mode", default="shape_class",
                 choices=["shape_class", "shape_rating"])
+ap.add_argument("--src", default="~/Desktop/tomato_training_pull",
+                help="folder with the pulled photos + manifest.json")
 args = ap.parse_args()
 DEFAULT_MODE = "shape_class"   # legacy samples (no "mode" key) bucket here
 
-SRC = Path(os.path.expanduser("~/Desktop/tomato_training_pull"))
+SRC = Path(os.path.expanduser(args.src))
 SEG = str(Path(__file__).parent / "runs/tomato_seg_v1/weights/best.pt")
 if args.mode == "shape_class":
     CLASSES = ["ROUND", "OVAL", "FLAT", "FASCIATED"]   # the 4 with data

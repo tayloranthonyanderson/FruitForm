@@ -14,6 +14,8 @@ ml/data/
 ml/training_pull/
 ml/cls_ds/
 ml/cls_ds_bal/
+ml/rating_ds/
+ml/rating_ds_bal/
 ml/seg_ds/
 ml/yolo_ds/
 ml/runs/
@@ -37,6 +39,7 @@ DerivedData/
 # Local-only training photos pulled from a device (your research data)
 training_pull/
 
-# Kept ON PURPOSE (do not ignore): the two trained models the app needs —
+# Kept ON PURPOSE (do not ignore): the trained models the app needs —
 #   TomatoBreeder/TomatoShapeNet.mlpackage         (shape classifier)
+#   TomatoBreeder/TomatoRatingNet.mlpackage        (1-9 shape-rating model)
 #   TomatoBreeder/Models/TomatoSegmenter.mlpackage (fruit detector)

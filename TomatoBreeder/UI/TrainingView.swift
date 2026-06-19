@@ -264,18 +264,23 @@ struct TrainingView: View {
     }
 
     private func capture() {
-        guard canShoot, let label = selectedLabel, let frame = controller.capture() else { return }
+        guard canShoot, let label = selectedLabel else { return }
         let fruitInView = controller.liveCount
-        if store.save(frame: frame, label: label, mode: mode) {
-            UINotificationFeedbackGenerator().notificationOccurred(.success)
-            let fruitNote = fruitInView > 0 ? "  ·  ~\(fruitInView) fruit" : ""
-            let tag = mode == .shapeRating ? "rating \(label)" : label
-            flash = "Saved photo → \(tag)\(fruitNote)  ·  \(store.count(for: label, mode: mode)) photos"
-            DispatchQueue.main.asyncAfter(deadline: .now() + 1.2) {
-                if flash?.hasPrefix("Saved") == true { flash = nil }
+        Task { @MainActor in
+            guard let frame = await controller.captureHighRes() else {
+                flash = "Save failed — try again"; return
             }
-        } else {
-            flash = "Save failed — try again"
+            if store.save(frame: frame, label: label, mode: mode) {
+                UINotificationFeedbackGenerator().notificationOccurred(.success)
+                let fruitNote = fruitInView > 0 ? "  ·  ~\(fruitInView) fruit" : ""
+                let tag = mode == .shapeRating ? "rating \(label)" : label
+                flash = "Saved photo → \(tag)\(fruitNote)  ·  \(store.count(for: label, mode: mode)) photos"
+                DispatchQueue.main.asyncAfter(deadline: .now() + 1.2) {
+                    if flash?.hasPrefix("Saved") == true { flash = nil }
+                }
+            } else {
+                flash = "Save failed — try again"
+            }
         }
     }
 }

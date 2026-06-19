@@ -11,6 +11,11 @@ struct LiveDetection: Identifiable {
     let viewRect: CGRect
     let distanceM: Float?
     let occluded: Bool
+    /// Quick-look preview labels (only when "Preview data" is on). These come from
+    /// the downscaled frame with no LiDAR/morphometrics — indicative, not the
+    /// authoritative values produced at capture.
+    var shape: String? = nil
+    var rating: Int? = nil
 }
 
 /// Owns the ARKit session + preview view. Streams the live camera frames,
@@ -21,6 +26,8 @@ final class ARCaptureController: NSObject, ObservableObject, ARSessionDelegate {
     let sceneView = ARSCNView(frame: .zero)
     private let ciContext = CIContext()
     private let detector = TomatoDetector()
+    private let shapeClassifier = TomatoShapeClassifier()
+    private let ratingClassifier = TomatoRatingClassifier()
     private let workQueue = DispatchQueue(label: "tomato.live.detect", qos: .userInitiated)
 
     @Published var lidarAvailable = true
@@ -29,6 +36,9 @@ final class ARCaptureController: NSObject, ObservableObject, ARSessionDelegate {
     @Published var centerDistanceM: Float?
     @Published var tiltDegrees: Double?     // camera tilt from straight-down (0 = top-down)
     @Published var liveCount = 0
+    /// When on, the live overlay also shows a quick-look shape + rating per fruit
+    /// (extra per-frame classifier passes; slows the overlay refresh a little).
+    @Published var previewData = false
 
     /// Set from the SwiftUI layer so detections map to the right on-screen size.
     var viewportSize: CGSize = UIScreen.main.bounds.size
@@ -43,6 +53,12 @@ final class ARCaptureController: NSObject, ObservableObject, ARSessionDelegate {
         lidarAvailable = ARWorldTrackingConfiguration.supportsFrameSemantics(.sceneDepth)
         let config = ARWorldTrackingConfiguration()
         if lidarAvailable { config.frameSemantics.insert(.sceneDepth) }
+        // Use the format that unlocks full-resolution (~12 MP) shutter stills via
+        // captureHighResolutionFrame. LiDAR depth runs as a separate stream, so it
+        // survives the format change; captureHighRes() still falls back if not.
+        if let hiRes = ARWorldTrackingConfiguration.recommendedVideoFormatForHighResolutionFrameCapturing {
+            config.videoFormat = hiRes
+        }
         config.worldAlignment = .gravity
         sceneView.session.delegate = self
         sceneView.session.run(config, options: [.resetTracking, .removeExistingAnchors])
@@ -54,10 +70,28 @@ final class ARCaptureController: NSObject, ObservableObject, ARSessionDelegate {
         isRunning = false
     }
 
-    /// Full-resolution snapshot for precise measurement on shutter.
+    /// Live AR frame (1920×1440) — used as a depth-safe fallback.
     func capture() -> CapturedFrame? {
         guard let frame = sceneView.session.currentFrame else { return nil }
         return CapturedFrame(arFrame: frame, ciContext: ciContext)
+    }
+
+    /// Full-resolution still (~12 MP) captured at the shutter while the AR session
+    /// keeps running. This is what gets stored + cropped for the classifier, so the
+    /// archive is zoomable and the crops are sharp. Falls back to the live AR frame
+    /// if the high-res frame is unavailable or lacks LiDAR depth (never lose depth).
+    func captureHighRes() async -> CapturedFrame? {
+        await withCheckedContinuation { (cont: CheckedContinuation<CapturedFrame?, Never>) in
+            sceneView.session.captureHighResolutionFrame { [weak self] frame, _ in
+                guard let self = self else { cont.resume(returning: nil); return }
+                if let frame = frame, frame.sceneDepth != nil,
+                   let cf = CapturedFrame(arFrame: frame, ciContext: self.ciContext) {
+                    cont.resume(returning: cf)            // high-res WITH depth
+                } else {
+                    cont.resume(returning: self.capture()) // fallback keeps depth
+                }
+            }
+        }
     }
 
     // MARK: - ARSessionDelegate (called on the main thread)
@@ -81,6 +115,7 @@ final class ARCaptureController: NSObject, ObservableObject, ARSessionDelegate {
 
         let viewport = viewportSize
         let displayT = frame.displayTransform(for: .portrait, viewportSize: viewport)
+        let preview = previewData   // read on main; used on the work queue
 
         // Extract everything we need *now* — the ARFrame's buffers are reused.
         guard let small = downscaledCGImage(frame.capturedImage, maxW: 768) else {
@@ -111,7 +146,15 @@ final class ARCaptureController: NSObject, ObservableObject, ARSessionDelegate {
                 }
                 let r = instance.rect
                 let occluded = r.minX < 0.015 || r.maxX > 0.985 || r.minY < 0.015 || r.maxY > 0.985
-                dets.append(LiveDetection(id: i, viewRect: viewRect, distanceM: dist, occluded: occluded))
+
+                // Quick-look shape + rating on the downscaled crop (preview only).
+                var shape: String?; var rating: Int?
+                if preview, !occluded, let crop = self.cropNorm(small, normRect: r) {
+                    shape = self.shapeClassifier.classify(cgImage: crop)?.label
+                    rating = self.ratingClassifier.classify(cgImage: crop)?.rating
+                }
+                dets.append(LiveDetection(id: i, viewRect: viewRect, distanceM: dist,
+                                          occluded: occluded, shape: shape, rating: rating))
             }
 
             DispatchQueue.main.async {
@@ -123,6 +166,19 @@ final class ARCaptureController: NSObject, ObservableObject, ARSessionDelegate {
     }
 
     // MARK: - Helpers
+
+    /// Padded crop of one fruit from a CGImage given a normalized rect.
+    private func cropNorm(_ image: CGImage, normRect: CGRect, pad: CGFloat = 0.06) -> CGImage? {
+        let W = CGFloat(image.width), H = CGFloat(image.height)
+        // Pad by a fraction of the BOX (not the image) so crops match the classifier's
+        // training framing (ml/extract_crops.py). See CaptureProcessor.paddedPixelRect.
+        let padX = normRect.width * pad, padY = normRect.height * pad
+        let rect = CGRect(x: (normRect.minX - padX) * W, y: (normRect.minY - padY) * H,
+                          width: (normRect.width + 2 * padX) * W, height: (normRect.height + 2 * padY) * H)
+            .intersection(CGRect(x: 0, y: 0, width: W, height: H))
+        guard !rect.isNull, rect.width > 1, rect.height > 1 else { return nil }
+        return image.cropping(to: rect)
+    }
 
     private func downscaledCGImage(_ pixelBuffer: CVPixelBuffer, maxW: CGFloat) -> CGImage? {
         let ci = CIImage(cvPixelBuffer: pixelBuffer)

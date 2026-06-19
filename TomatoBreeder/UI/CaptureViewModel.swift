@@ -20,17 +20,17 @@ final class CaptureViewModel: ObservableObject {
             errorMessage = "Enter an accession / plant ID first."
             return
         }
-        guard let frame = controller.capture() else {
-            errorMessage = "Couldn't read the camera — hold steady and try again."
-            return
-        }
-
         isProcessing = true
         errorMessage = nil
         lastSummary = nil
         let mode = self.mode
 
         Task {
+            guard let frame = await controller.captureHighRes() else {
+                isProcessing = false
+                errorMessage = "Couldn't read the camera — hold steady and try again."
+                return
+            }
             let draft = await processor.process(
                 frame: frame, accession: acc, mode: mode,
                 sessionID: UUID(), timestamp: Date(), settings: settings

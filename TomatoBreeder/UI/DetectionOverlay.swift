@@ -22,11 +22,35 @@ struct DetectionOverlay: View {
                                 .offset(y: -20)
                         }
                     }
+                    .overlay(alignment: .bottom) { previewTag(d) }
                     .position(x: d.viewRect.midX, y: d.viewRect.midY)
             }
         }
         .allowsHitTesting(false)
         .ignoresSafeArea()
+    }
+
+    /// Quick-look "shape · R#" tag under a box (only when preview data is on).
+    @ViewBuilder private func previewTag(_ d: LiveDetection) -> some View {
+        if d.shape != nil || d.rating != nil {
+            HStack(spacing: 4) {
+                if let s = d.shape {
+                    Text(s)
+                        .padding(.horizontal, 5).padding(.vertical, 2)
+                        .background(.black.opacity(0.7), in: Capsule())
+                        .foregroundStyle(.white)
+                }
+                if let r = d.rating {
+                    Text("R\(r)")
+                        .padding(.horizontal, 5).padding(.vertical, 2)
+                        .background(TrainingMode.ratingColor(for: String(r)) ?? .gray, in: Capsule())
+                        .foregroundStyle(.white)
+                }
+            }
+            .font(.caption2.bold())
+            .fixedSize()
+            .offset(y: 18)
+        }
     }
 }
 

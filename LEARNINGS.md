@@ -98,3 +98,22 @@ durable fix and isn't built yet.
   clamps to 1.00 for everything. (Fixed; don't reintroduce.)
 - **XcodeGen:** the `.xcodeproj` is generated and git-ignored. Add a file → run
   `xcodegen generate`, or the build won't see it.
+- **Classifier crop padding = fraction of the BOX, not the image.** The on-device
+  crop fed to the shape/rating classifier must pad by `box_width * 0.06`, matching
+  `ml/extract_crops.py`. An earlier bug padded by `image_width * 0.06` (~115 px on a
+  1920px frame), burying each fruit in background — the classifier then called
+  everything flat/fasciated / rating 9 at high confidence, while every offline test
+  on the *stored* photos looked fine. Train/serve crop framing must match. See
+  `CaptureProcessor.paddedPixelRect` (and the same fix in `ManualFruit`,
+  `ARCaptureController.cropNorm`).
+- **Codable + new manifest fields:** Swift's synthesized `Decodable` does NOT honor
+  a property's default value for a missing key — it throws `keyNotFound`. Adding a
+  non-optional `mode` to `TrainingSample` made the app fail to load every old
+  manifest entry (then overwrite it). Make new manifest fields **Optional** so old
+  records decode (missing key → nil). See `TrainingSample.mode`.
+- **Capture resolution:** ARKit's live frame is only 1920×1440 (2.8 MP). For a
+  zoomable archive + sharp classifier crops, set
+  `config.videoFormat = recommendedVideoFormatForHighResolutionFrameCapturing` and
+  grab the shutter still via `session.captureHighResolutionFrame` (→ 12 MP). LiDAR
+  depth is a separate stream and survives the format change (verify it does, and
+  keep the fallback). Depth itself stays 256×192 regardless. See `ARCaptureController`.

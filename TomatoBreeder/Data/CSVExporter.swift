@@ -6,7 +6,8 @@ enum CSVExporter {
         "timestamp", "session_id", "photo_filename", "accession", "capture_mode", "fruit_id",
         "major_axis_cm", "minor_axis_cm", "shape_index", "eccentricity", "flatness", "solidity",
         "volume_cm3", "weight_g_est", "semi_a_cm", "semi_b_cm", "semi_c_cm",
-        "shape_category", "ripeness", "color_hex", "classifier_confidence", "depth_m", "occluded",
+        "shape_category", "classifier_confidence", "shape_rating", "shape_rating_confidence",
+        "ripeness", "color_hex", "depth_m", "occluded",
         "source", "note"
     ]
 
@@ -36,9 +37,11 @@ enum CSVExporter {
                 num(m.semiAxisBCm),
                 num(m.semiAxisCCm),
                 m.shapeCategory ?? "",
+                num(m.classifierConfidence),
+                m.shapeRating.map(String.init) ?? "",
+                num(m.shapeRatingConfidence),
                 m.ripeness ?? "",
                 m.colorHex ?? "",
-                num(m.classifierConfidence),
                 num(m.depthMeters),
                 m.occluded ? "1" : "0",
                 m.source,

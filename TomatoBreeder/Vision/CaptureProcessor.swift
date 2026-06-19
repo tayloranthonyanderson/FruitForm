@@ -16,6 +16,7 @@ struct CaptureDraft {
 final class CaptureProcessor {
     private let detector = TomatoDetector()
     private let shapeClassifier = TomatoShapeClassifier()
+    private let ratingClassifier = TomatoRatingClassifier()
 
     func process(frame: CapturedFrame,
                  accession: String,
@@ -103,7 +104,16 @@ final class CaptureProcessor {
                     measurement.source = "device+cloud"
                 }
             }
-            
+
+            // fruit_shape_rating trait: 1–9 processing desirability, predicted by
+            // the trained rating model on the same crop (independent of shape class).
+            if ratingClassifier.isReady, !m.occluded,
+               let cg = cropCGImage(frame: frame, normRect: instance.rect),
+               let r = ratingClassifier.classify(cgImage: cg) {
+                measurement.shapeRating = r.rating
+                measurement.shapeRatingConfidence = r.confidence
+            }
+
             // Extract Color from Mask
             var sumR = 0, sumG = 0, sumB = 0, count = 0
             for my in 0..<160 {
@@ -164,29 +174,31 @@ final class CaptureProcessor {
     }
 
     /// Padded fruit crop as a CGImage (for the on-device classifier).
+    /// Pad is a fraction of the BOX (matching ml/extract_crops.py), NOT the image —
+    /// padding by the image size buries small fruit in background and the classifier
+    /// mis-reads them as flat/fasciated.
     private func cropCGImage(frame: CapturedFrame, normRect: CGRect) -> CGImage? {
-        let pad = 0.06
-        let rect = CGRect(
-            x: (normRect.minX - pad) * frame.imageWidth,
-            y: (normRect.minY - pad) * frame.imageHeight,
-            width: (normRect.width + 2 * pad) * frame.imageWidth,
-            height: (normRect.height + 2 * pad) * frame.imageHeight
-        ).intersection(CGRect(x: 0, y: 0, width: frame.imageWidth, height: frame.imageHeight))
+        let rect = paddedPixelRect(normRect, frame: frame)
         guard !rect.isNull, rect.width > 1, rect.height > 1 else { return nil }
         return frame.cgImage.cropping(to: rect)
     }
 
     /// Crop from a standard-normalized rect (top-left origin).
     private func crop(frame: CapturedFrame, normRect: CGRect) -> Data? {
-        let pad = 0.06
-        let rect = CGRect(
-            x: (normRect.minX - pad) * frame.imageWidth,
-            y: (normRect.minY - pad) * frame.imageHeight,
-            width: (normRect.width + 2 * pad) * frame.imageWidth,
-            height: (normRect.height + 2 * pad) * frame.imageHeight
-        ).intersection(CGRect(x: 0, y: 0, width: frame.imageWidth, height: frame.imageHeight))
+        let rect = paddedPixelRect(normRect, frame: frame)
         guard !rect.isNull, rect.width > 1, rect.height > 1,
               let cg = frame.cgImage.cropping(to: rect) else { return nil }
         return UIImage(cgImage: cg).jpegData(compressionQuality: 0.85)
+    }
+
+    /// Box+pad crop in pixel space. `pad` is a fraction of the box, clipped to image.
+    private func paddedPixelRect(_ normRect: CGRect, frame: CapturedFrame, pad: CGFloat = 0.06) -> CGRect {
+        let padX = normRect.width * pad, padY = normRect.height * pad
+        return CGRect(
+            x: (normRect.minX - padX) * frame.imageWidth,
+            y: (normRect.minY - padY) * frame.imageHeight,
+            width: (normRect.width + 2 * padX) * frame.imageWidth,
+            height: (normRect.height + 2 * padY) * frame.imageHeight
+        ).intersection(CGRect(x: 0, y: 0, width: frame.imageWidth, height: frame.imageHeight))
     }
 }

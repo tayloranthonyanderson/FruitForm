@@ -139,6 +139,14 @@ struct SessionDetailView: View {
                         .font(.subheadline.weight(.semibold))
                         .foregroundStyle(.green)
                 }
+                if let rating = fruit.shapeRating {
+                    Text("R\(rating)")
+                        .font(.caption.bold())
+                        .foregroundStyle(.white)
+                        .padding(.horizontal, 6).padding(.vertical, 2)
+                        .background(TrainingMode.ratingColor(for: String(rating)) ?? .gray,
+                                    in: Capsule())
+                }
                 if let rip = fruit.ripeness {
                     Text(rip)
                         .font(.subheadline)
