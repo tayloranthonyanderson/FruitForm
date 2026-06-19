@@ -3,20 +3,36 @@ Turn the pre-sorted group photos into a per-fruit classification dataset.
 
 For each labeled photo, run the trained segmenter to find every fruit, crop it
 (box + small pad — same crop the app will feed the classifier at inference), and
-write it under cls_ds/<split>/<LABEL>/. The train/val split is *grouped by source
-photo*: all crops from one photo stay on the same side, so no fruit leaks across
-the split and the val score is honest.
+write it under <out>/<split>/<CATEGORY>/. The train/val split is *grouped by
+source photo*: all crops from one photo stay on the same side, so no fruit leaks
+across the split and the val score is honest.
+
+Two modes (matches the app's TrainingMode):
+  --mode shape_class   shape labels (ROUND/OVAL/FLAT/FASCIATED) -> cls_ds   [default]
+  --mode shape_rating  the 1-9 desirability scale               -> rating_ds
+Legacy samples have no "mode" key; they're treated as shape_class, so
+`--mode shape_class` reproduces the original dataset exactly.
 """
-import json, os, random
+import argparse, json, os, random
 from pathlib import Path
 from collections import defaultdict, Counter
 from PIL import Image
 from ultralytics import YOLO
 
+ap = argparse.ArgumentParser()
+ap.add_argument("--mode", default="shape_class",
+                choices=["shape_class", "shape_rating"])
+args = ap.parse_args()
+DEFAULT_MODE = "shape_class"   # legacy samples (no "mode" key) bucket here
+
 SRC = Path(os.path.expanduser("~/Desktop/tomato_training_pull"))
-OUT = Path(__file__).parent / "cls_ds"
 SEG = str(Path(__file__).parent / "runs/tomato_seg_v1/weights/best.pt")
-CLASSES = ["ROUND", "OVAL", "FLAT", "FASCIATED"]   # the 4 with data
+if args.mode == "shape_class":
+    CLASSES = ["ROUND", "OVAL", "FLAT", "FASCIATED"]   # the 4 with data
+    OUT = Path(__file__).parent / "cls_ds"
+else:  # shape_rating
+    CLASSES = [str(i) for i in range(1, 10)]           # "1".."9"
+    OUT = Path(__file__).parent / "rating_ds"
 CONF = 0.50          # match the app's detector; high precision = clean crops
 PAD = 0.06           # same pad as the app's cloud-crop
 VAL_FRAC = 0.15
@@ -25,7 +41,7 @@ MIN_PX = 24
 manifest = json.load(open(SRC / "manifest.json"))
 by_label = defaultdict(list)
 for s in manifest:
-    if s["label"] in CLASSES:
+    if s.get("mode", DEFAULT_MODE) == args.mode and s["label"] in CLASSES:
         by_label[s["label"]].append(s["id"])
 
 # Grouped, stratified split: per class, hold out VAL_FRAC of the *photos*.
@@ -75,4 +91,4 @@ for sub in ("train", "val"):
         tot += n
         print(f"  {sub:5s} {c:10s} {n:5d}  (from {photos_used[(sub, c)]} photos)")
     print(f"  {sub:5s} {'TOTAL':10s} {tot:5d}")
-print(f"\nwrote dataset to {OUT}")
+print(f"\nwrote {args.mode} dataset to {OUT}")

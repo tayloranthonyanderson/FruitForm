@@ -5,6 +5,9 @@ import Foundation
 struct TrainingSample: Codable, Identifiable {
     let id: UUID
     var label: String            // editable: user can relabel a mis-tagged sample
+    /// Which training mode produced this sample. Optional-with-default so the
+    /// pre-existing captures (no key) decode as shape-class — no migration needed.
+    var mode: String = TrainingMode.default.rawValue
     let timestamp: Date
     let imageWidth: Int
     let imageHeight: Int
@@ -24,4 +27,6 @@ struct TrainingSample: Codable, Identifiable {
 
     var imageFile: String { "\(id.uuidString).jpg" }
     var depthFile: String { "\(id.uuidString).depth" }   // raw Float32, row-major, meters
+
+    var trainingMode: TrainingMode { TrainingMode(rawValue: mode) ?? .default }
 }

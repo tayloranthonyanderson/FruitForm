@@ -42,7 +42,17 @@ final class TrainingStore: ObservableObject {
     }
 
     var totalCount: Int { samples.count }
-    func count(for label: String) -> Int { samples.reduce(0) { $0 + ($1.label == label ? 1 : 0) } }
+
+    /// Count samples with a given label, optionally restricted to one mode so a
+    /// shape label and a rating digit never cross-count.
+    func count(for label: String, mode: TrainingMode? = nil) -> Int {
+        samples.reduce(0) { $0 + ($1.label == label && (mode == nil || $1.trainingMode == mode) ? 1 : 0) }
+    }
+
+    /// Total samples captured in a given mode (for the library segment + status).
+    func count(forMode mode: TrainingMode) -> Int {
+        samples.reduce(0) { $0 + ($1.trainingMode == mode ? 1 : 0) }
+    }
 
     // MARK: - Labels
 
@@ -58,12 +68,20 @@ final class TrainingStore: ObservableObject {
         saveLabels()
     }
 
-    /// Change a sample's shape label (fixing a mis-tag) without losing the photo/depth.
+    /// Change a sample's category (fixing a mis-tag) without losing the photo/depth.
+    /// For editable modes (shape) the value is uppercased and added to the label
+    /// list if new; for fixed modes (rating 1–9) the raw value is kept and the label
+    /// list is left untouched.
     func relabel(_ id: UUID, to newLabel: String) {
-        let l = newLabel.trimmingCharacters(in: .whitespacesAndNewlines).uppercased()
         guard let i = samples.firstIndex(where: { $0.id == id }) else { return }
-        samples[i].label = l
-        if !labels.contains(l) { labels.append(l); saveLabels() }
+        let mode = samples[i].trainingMode
+        if mode.categoriesAreEditable {
+            let l = newLabel.trimmingCharacters(in: .whitespacesAndNewlines).uppercased()
+            samples[i].label = l
+            if !labels.contains(l) { labels.append(l); saveLabels() }
+        } else {
+            samples[i].label = newLabel
+        }
         saveManifest()
     }
 
@@ -85,7 +103,7 @@ final class TrainingStore: ObservableObject {
     }()
 
     @discardableResult
-    func save(frame: CapturedFrame, label: String) -> Bool {
+    func save(frame: CapturedFrame, label: String, mode: TrainingMode = .default) -> Bool {
         let m = frame.cameraTransform
         let transform: [Float] = [
             m.columns.0.x, m.columns.0.y, m.columns.0.z, m.columns.0.w,
@@ -99,7 +117,7 @@ final class TrainingStore: ObservableObject {
             .map(Double.init)
 
         let sample = TrainingSample(
-            id: UUID(), label: label, timestamp: Date(),
+            id: UUID(), label: label, mode: mode.rawValue, timestamp: Date(),
             imageWidth: Int(frame.imageWidth), imageHeight: Int(frame.imageHeight),
             fx: frame.fx, fy: frame.fy, cx: frame.cx, cy: frame.cy,
             depthWidth: frame.depth?.width ?? 0, depthHeight: frame.depth?.height ?? 0,

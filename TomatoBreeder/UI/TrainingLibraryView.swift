@@ -5,15 +5,33 @@ import SwiftUI
 struct TrainingLibraryView: View {
     @EnvironmentObject var store: TrainingStore
     @Environment(\.dismiss) private var dismiss
-    @State private var filter: String?         // nil = all labels
+    @State private var modeFilter: TrainingMode?   // nil = all modes
+    @State private var filter: String?             // nil = all categories
     @State private var detail: TrainingSample?
     @State private var exportItem: ExportItem?
 
     private let columns = [GridItem(.adaptive(minimum: 104), spacing: 6)]
 
     private var filtered: [TrainingSample] {
-        let s = filter == nil ? store.samples : store.samples.filter { $0.label == filter }
-        return s.sorted { $0.timestamp > $1.timestamp }
+        store.samples
+            .filter { modeFilter == nil || $0.trainingMode == modeFilter }
+            .filter { filter == nil || $0.label == filter }
+            .sorted { $0.timestamp > $1.timestamp }
+    }
+
+    /// Category options for the label sub-filter, scoped to the selected mode.
+    private var categoryOptions: [String] {
+        modeFilter?.fixedCategories ?? store.labels
+    }
+
+    /// Toolbar label reflecting the active mode + category filters.
+    private var filterLabel: String {
+        switch (modeFilter, filter) {
+        case (nil, nil):       return "All"
+        case (let m?, nil):    return m.shortName
+        case (nil, let f?):    return f
+        case (let m?, let f?): return "\(m.shortName): \(f)"
+        }
     }
 
     var body: some View {
@@ -40,12 +58,22 @@ struct TrainingLibraryView: View {
             .toolbar {
                 ToolbarItem(placement: .topBarLeading) {
                     Menu {
-                        Button("All labels (\(store.totalCount))") { filter = nil }
-                        ForEach(store.labels, id: \.self) { l in
-                            Button("\(l) · \(store.count(for: l))") { filter = l }
+                        Section("Mode") {
+                            Button("All modes (\(store.totalCount))") { modeFilter = nil; filter = nil }
+                            ForEach(TrainingMode.allCases) { m in
+                                Button("\(m.shortName) (\(store.count(forMode: m)))") {
+                                    modeFilter = m; filter = nil
+                                }
+                            }
+                        }
+                        Section(modeFilter?.displayName ?? "Category") {
+                            Button("All categories") { filter = nil }
+                            ForEach(categoryOptions, id: \.self) { l in
+                                Button("\(l) · \(store.count(for: l, mode: modeFilter))") { filter = l }
+                            }
                         }
                     } label: {
-                        Label(filter ?? "All", systemImage: "line.3.horizontal.decrease.circle")
+                        Label(filterLabel, systemImage: "line.3.horizontal.decrease.circle")
                     }
                 }
                 ToolbarItem(placement: .topBarTrailing) {
@@ -68,10 +96,12 @@ struct TrainingLibraryView: View {
             } else {
                 Rectangle().fill(.gray.opacity(0.3))
             }
-            Text(s.label)
+            Text(s.trainingMode == .shapeRating ? "R\(s.label)" : s.label)
                 .font(.caption2.bold())
                 .padding(.horizontal, 4).padding(.vertical, 2)
-                .background(.black.opacity(0.6))
+                .background(s.trainingMode == .shapeRating
+                            ? AnyShapeStyle(TrainingMode.ratingColor(for: s.label) ?? .gray)
+                            : AnyShapeStyle(Color.black.opacity(0.6)))
                 .foregroundStyle(.white)
                 .padding(4)
         }
@@ -152,22 +182,25 @@ struct TrainingSampleDetailView: View {
                 }
                 VStack(spacing: 6) {
                     HStack(alignment: .top) {
-                        Text("Label").foregroundStyle(.secondary).frame(width: 120, alignment: .leading)
+                        Text(sample.trainingMode == .shapeRating ? "Rating" : "Label")
+                            .foregroundStyle(.secondary).frame(width: 120, alignment: .leading)
                         Menu {
-                            ForEach(store.labels, id: \.self) { l in
+                            ForEach(sample.trainingMode.fixedCategories ?? store.labels, id: \.self) { l in
                                 Button { store.relabel(sample.id, to: l); dismiss() } label: {
                                     if l == sample.label { Label(l, systemImage: "checkmark") } else { Text(l) }
                                 }
                             }
                         } label: {
                             HStack(spacing: 4) {
-                                Text(sample.label).fontWeight(.semibold)
+                                Text(sample.trainingMode == .shapeRating ? "\(sample.label) — \(TrainingMode.ratingAnchors[sample.label] ?? "between")" : sample.label)
+                                    .fontWeight(.semibold)
                                 Image(systemName: "pencil").font(.caption2)
                             }
                         }
                         Spacer()
                     }
                     .font(.subheadline)
+                    row("Mode", sample.trainingMode.displayName)
                     row("Captured", sample.timestamp.formatted(date: .abbreviated, time: .standard))
                     row("Distance", sample.centerDistanceM.map { String(format: "%.0f cm", $0 * 100) } ?? "—")
                     row("Tilt", String(format: "%.0f° from top-down", sample.tiltDegrees))

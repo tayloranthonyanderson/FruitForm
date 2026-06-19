@@ -148,3 +148,39 @@ struct ShapeGuideView: View {
         }
     }
 }
+
+/// Reference sheet for the 1–9 shape-rating scale. Anchors are illustrative
+/// examples on the odd steps, not a rubric.
+struct RatingGuideView: View {
+    @Environment(\.dismiss) private var dismiss
+
+    var body: some View {
+        NavigationStack {
+            List {
+                Section {
+                    Text("Score on overall impression — sort piles relative to each other rather than matching a definition. Many different defects can land a fruit at the same number. 1 = ideal processing shape, 9 = cull.")
+                        .font(.subheadline).foregroundStyle(.secondary)
+                }
+                Section {
+                    ForEach(1...9, id: \.self) { v in
+                        let digit = String(v)
+                        HStack(spacing: 14) {
+                            Text(digit)
+                                .font(.headline.bold())
+                                .foregroundStyle(.white)
+                                .frame(width: 38, height: 38)
+                                .background(Circle().fill(TrainingMode.ratingColor(for: digit) ?? .gray))
+                            Text(TrainingMode.ratingAnchors[digit] ?? "Between the steps above and below")
+                                .font(.subheadline)
+                                .foregroundStyle(TrainingMode.ratingAnchors[digit] == nil ? .secondary : .primary)
+                        }
+                        .padding(.vertical, 2)
+                    }
+                }
+            }
+            .navigationTitle("Shape rating 1–9")
+            .navigationBarTitleDisplayMode(.inline)
+            .toolbar { ToolbarItem(placement: .topBarTrailing) { Button("Done") { dismiss() } } }
+        }
+    }
+}
