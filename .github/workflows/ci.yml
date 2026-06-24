@@ -24,12 +24,12 @@ jobs:
           echo "Using simulator: ${SIM:-iPhone 16}"
           set -o pipefail
           xcodebuild test \
-            -project TomatoBreeder.xcodeproj \
-            -scheme TomatoBreeder \
+            -project FruitForm.xcodeproj \
+            -scheme FruitForm \
             -destination "platform=iOS Simulator,name=${SIM:-iPhone 16}" \
             CODE_SIGNING_ALLOWED=NO | xcpretty || \
           xcodebuild test \
-            -project TomatoBreeder.xcodeproj \
-            -scheme TomatoBreeder \
+            -project FruitForm.xcodeproj \
+            -scheme FruitForm \
             -destination "platform=iOS Simulator,name=${SIM:-iPhone 16}" \
             CODE_SIGNING_ALLOWED=NO

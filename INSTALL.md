@@ -25,13 +25,13 @@ brew install xcodegen
 xcodegen generate
 
 # 4. Open it
-open TomatoBreeder.xcodeproj
+open FruitForm.xcodeproj
 ```
 
 Then in Xcode:
 
 5. **Add your Apple ID:** Xcode → **Settings → Accounts → +** → sign in (free is fine).
-6. **Sign with your team:** select the **TomatoBreeder** target → **Signing &
+6. **Sign with your team:** select the **FruitForm** target → **Signing &
    Capabilities** → check **Automatically manage signing** → choose **your** team
    in the **Team** dropdown.
    > The repo hard-codes the original author's Team ID. Step 6 overrides it for
@@ -61,11 +61,11 @@ so there's nothing else to download for the app to work.
 
 ```bash
 DEV=<device-udid>            # xcrun devicectl list devices
-APP=$(xcodebuild -project TomatoBreeder.xcodeproj -scheme TomatoBreeder \
-      -destination "id=$DEV" -showBuildSettings | awk '/ BUILT_PRODUCTS_DIR/{print $3}')/TomatoBreeder.app
-xcodebuild -project TomatoBreeder.xcodeproj -scheme TomatoBreeder -destination "id=$DEV" build
+APP=$(xcodebuild -project FruitForm.xcodeproj -scheme FruitForm \
+      -destination "id=$DEV" -showBuildSettings | awk '/ BUILT_PRODUCTS_DIR/{print $3}')/FruitForm.app
+xcodebuild -project FruitForm.xcodeproj -scheme FruitForm -destination "id=$DEV" build
 xcrun devicectl device install app --device "$DEV" "$APP"
-xcrun devicectl device process launch --device "$DEV" com.tomatobreeder.app   # phone must be unlocked
+xcrun devicectl device process launch --device "$DEV" com.fruitform.app   # phone must be unlocked
 ```
 
 ## Licensing note

@@ -1,5 +1,5 @@
 import XCTest
-@testable import TomatoBreeder
+@testable import FruitForm
 
 final class TrainingModeTests: XCTestCase {
 

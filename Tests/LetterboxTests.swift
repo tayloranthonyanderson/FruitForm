@@ -1,5 +1,5 @@
 import XCTest
-@testable import TomatoBreeder
+@testable import FruitForm
 
 /// The detector letterboxes the image into the model's 640² canvas; getting the
 /// un-letterbox math wrong lands boxes/masks on the wrong fruit.

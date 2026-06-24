@@ -1,7 +1,7 @@
 import SwiftUI
 
 @main
-struct TomatoBreederApp: App {
+struct FruitFormApp: App {
     @StateObject private var store = MeasurementStore()
     @StateObject private var settings = AppSettings()
     @StateObject private var trainingStore = TrainingStore()

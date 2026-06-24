@@ -50,7 +50,7 @@ A few problems that were more interesting than the feature list:
   the **image** (~115 px) instead of the **box** (~7 px), burying each fruit in
   background. The model was fine; the *input framing* didn't match training. Found by
   pulling the exact on-device crops and bisecting the pipeline. Now centralized in one
-  tested helper ([`CropGeometry`](TomatoBreeder/Vision/CropGeometry.swift)) with a
+  tested helper ([`CropGeometry`](FruitForm/Vision/CropGeometry.swift)) with a
   [regression test](Tests/CropGeometryTests.swift).
 - **A silent backward-compat trap.** Adding a new `mode` field made the app fail to load
   every existing capture, because Swift's synthesized `Decodable` throws on a missing key
@@ -84,20 +84,20 @@ Requires **Xcode 26+**, **[XcodeGen]**, and a **LiDAR iPhone** (12 Pro or newer 
 
 ```bash
 brew install xcodegen
-xcodegen generate            # generates TomatoBreeder.xcodeproj from project.yml
-open TomatoBreeder.xcodeproj # set your own signing team, pick your iPhone, ⌘R
+xcodegen generate            # generates FruitForm.xcodeproj from project.yml
+open FruitForm.xcodeproj # set your own signing team, pick your iPhone, ⌘R
 ```
 
 Full walkthrough: **[INSTALL.md](INSTALL.md)**. Run the tests with:
 
 ```bash
-xcodebuild test -scheme TomatoBreeder -destination 'platform=iOS Simulator,name=iPhone 16'
+xcodebuild test -scheme FruitForm -destination 'platform=iOS Simulator,name=iPhone 16'
 ```
 
 ## Repo layout
 
 ```
-TomatoBreeder/   SwiftUI app — Capture/ Vision/ UI/ Data/ Models/ Cloud/  + committed .mlpackage models
+FruitForm/   SwiftUI app — Capture/ Vision/ UI/ Data/ Models/ Cloud/  + committed .mlpackage models
 Tests/           XCTest unit tests (crop geometry, training modes, letterbox math)
 ml/              Python training pipeline (extract crops → train → export Core ML)
 docs/            demo media

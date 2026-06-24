@@ -1,6 +1,6 @@
 import XCTest
 import CoreGraphics
-@testable import TomatoBreeder
+@testable import FruitForm
 
 /// Regression guard for the crop-padding bug: the classifier crop must pad by a
 /// fraction of the *box*, not the *image*. Padding by the image buried small fruit
