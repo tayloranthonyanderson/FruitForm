@@ -2,13 +2,13 @@
 
 [![CI](https://github.com/tayloranthonyanderson/FruitForm/actions/workflows/ci.yml/badge.svg)](https://github.com/tayloranthonyanderson/FruitForm/actions/workflows/ci.yml)
 
-**An offline iPhone app that turns a pile of tomatoes into per-fruit breeding data** —
+**An offline iPhone app that turns a pile of tomatoes into per-fruit shape & size data** —
 shape class, a 1–9 shape-quality rating, size (cm), volume, weight, eccentricity,
 flatness, and color — using the LiDAR depth camera and two on-device neural nets. No
-cloud, no scale card. Built for a real tomato-breeding program to replace slow manual
-phenotyping.
+cloud, no scale card. A personal side project exploring on-device computer vision and
+LiDAR depth measurement.
 
-![FruitForm detecting and grading a tray of processing tomatoes](docs/demo.jpg)
+![FruitForm detecting and grading a tray of tomatoes](docs/demo.jpg)
 
 *Live output: every fruit is segmented, then classified for shape and graded 1–9, while
 LiDAR measures absolute size — all on-device.*
@@ -21,7 +21,7 @@ fruit — the polar height — points straight at the lens and is **invisible in
 plain 2D classifier (and even a general cloud vision model) calls a flat beefsteak and a
 round globe both "round." This viewpoint constraint drives the whole design:
 
-- A classifier trained on the breeder's *own* top-down photos learns the human-visible
+- A classifier trained on your *own* top-down photos learns the human-visible
   cues (blossom-end scar, lobing) that correlate with shape from above.
 - **LiDAR recovers the missing axis** — depth gives true size and a `flatness` metric the
   silhouette can't see.

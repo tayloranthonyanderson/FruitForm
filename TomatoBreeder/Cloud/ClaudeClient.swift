@@ -85,7 +85,7 @@ final class ClaudeClient {
         ]
 
         let prompt = """
-        You are assisting a tomato breeder. Classify the shape of the single tomato fruit \
+        You are a tomato fruit-shape classifier. Classify the shape of the single tomato fruit \
         that is the main subject of this image into exactly one of these 7 categories:
         \(Self.categoryGuide)
         Judge shape along the polar (stem-to-blossom) axis. \(hints)\
