@@ -66,17 +66,10 @@ enum ManualFruit {
         return (meas, stored)
     }
 
-    /// Padded fruit crop as a CGImage (for the on-device classifier).
-    /// Pad is a fraction of the BOX (matching ml/extract_crops.py), not the image.
+    /// Padded fruit crop as a CGImage (for the on-device classifier). See `CropGeometry`.
     private static func cropCG(frame: CapturedFrame, normRect: CGRect) -> CGImage? {
-        let pad = 0.06
-        let padX = normRect.width * pad, padY = normRect.height * pad
-        let rect = CGRect(
-            x: (normRect.minX - padX) * frame.imageWidth,
-            y: (normRect.minY - padY) * frame.imageHeight,
-            width: (normRect.width + 2 * padX) * frame.imageWidth,
-            height: (normRect.height + 2 * padY) * frame.imageHeight
-        ).intersection(CGRect(x: 0, y: 0, width: frame.imageWidth, height: frame.imageHeight))
+        let rect = CropGeometry.paddedRect(normRect: normRect,
+                                           imageWidth: frame.imageWidth, imageHeight: frame.imageHeight)
         guard !rect.isNull, rect.width > 1, rect.height > 1 else { return nil }
         return frame.cgImage.cropping(to: rect)
     }

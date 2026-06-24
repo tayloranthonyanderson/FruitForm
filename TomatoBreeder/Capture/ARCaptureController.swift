@@ -168,14 +168,11 @@ final class ARCaptureController: NSObject, ObservableObject, ARSessionDelegate {
     // MARK: - Helpers
 
     /// Padded crop of one fruit from a CGImage given a normalized rect.
-    private func cropNorm(_ image: CGImage, normRect: CGRect, pad: CGFloat = 0.06) -> CGImage? {
-        let W = CGFloat(image.width), H = CGFloat(image.height)
-        // Pad by a fraction of the BOX (not the image) so crops match the classifier's
-        // training framing (ml/extract_crops.py). See CaptureProcessor.paddedPixelRect.
-        let padX = normRect.width * pad, padY = normRect.height * pad
-        let rect = CGRect(x: (normRect.minX - padX) * W, y: (normRect.minY - padY) * H,
-                          width: (normRect.width + 2 * padX) * W, height: (normRect.height + 2 * padY) * H)
-            .intersection(CGRect(x: 0, y: 0, width: W, height: H))
+    private func cropNorm(_ image: CGImage, normRect: CGRect) -> CGImage? {
+        // Shared box-proportional crop (see CropGeometry) so the preview matches the
+        // classifier's training framing.
+        let rect = CropGeometry.paddedRect(normRect: normRect,
+                                           imageWidth: CGFloat(image.width), imageHeight: CGFloat(image.height))
         guard !rect.isNull, rect.width > 1, rect.height > 1 else { return nil }
         return image.cropping(to: rect)
     }

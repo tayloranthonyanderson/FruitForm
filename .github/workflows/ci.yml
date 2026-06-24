@@ -1,0 +1,35 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+jobs:
+  build-and-test:
+    runs-on: macos-15
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Install XcodeGen
+        run: brew install xcodegen
+
+      - name: Generate Xcode project
+        run: xcodegen generate
+
+      - name: Build & unit-test (iOS Simulator, no signing)
+        run: |
+          SIM=$(xcrun simctl list devices available \
+                | grep -oE "iPhone 1[0-9][^(]*" | head -1 | xargs)
+          echo "Using simulator: ${SIM:-iPhone 16}"
+          set -o pipefail
+          xcodebuild test \
+            -project TomatoBreeder.xcodeproj \
+            -scheme TomatoBreeder \
+            -destination "platform=iOS Simulator,name=${SIM:-iPhone 16}" \
+            CODE_SIGNING_ALLOWED=NO | xcpretty || \
+          xcodebuild test \
+            -project TomatoBreeder.xcodeproj \
+            -scheme TomatoBreeder \
+            -destination "platform=iOS Simulator,name=${SIM:-iPhone 16}" \
+            CODE_SIGNING_ALLOWED=NO

@@ -191,14 +191,9 @@ final class CaptureProcessor {
         return UIImage(cgImage: cg).jpegData(compressionQuality: 0.85)
     }
 
-    /// Box+pad crop in pixel space. `pad` is a fraction of the box, clipped to image.
-    private func paddedPixelRect(_ normRect: CGRect, frame: CapturedFrame, pad: CGFloat = 0.06) -> CGRect {
-        let padX = normRect.width * pad, padY = normRect.height * pad
-        return CGRect(
-            x: (normRect.minX - padX) * frame.imageWidth,
-            y: (normRect.minY - padY) * frame.imageHeight,
-            width: (normRect.width + 2 * padX) * frame.imageWidth,
-            height: (normRect.height + 2 * padY) * frame.imageHeight
-        ).intersection(CGRect(x: 0, y: 0, width: frame.imageWidth, height: frame.imageHeight))
+    /// Box+pad crop in pixel space (see `CropGeometry` for the box-vs-image rationale).
+    private func paddedPixelRect(_ normRect: CGRect, frame: CapturedFrame) -> CGRect {
+        CropGeometry.paddedRect(normRect: normRect,
+                                imageWidth: frame.imageWidth, imageHeight: frame.imageHeight)
     }
 }
