@@ -8,6 +8,10 @@ flatness, and color — using the LiDAR depth camera and two on-device neural ne
 cloud, no scale card. A personal side project exploring on-device computer vision and
 LiDAR depth measurement.
 
+> *Personal project, built on my own time and equipment using publicly available or
+> self-collected data. Not affiliated with, funded by, or derived from any employer's
+> work, data, or systems.*
+
 ![FruitForm detecting and grading a tray of tomatoes](docs/demo.jpg)
 
 *Live output: every fruit is segmented, then classified for shape and graded 1–9, while
@@ -119,6 +123,9 @@ python3 -m venv ml/.venv && source ml/.venv/bin/activate && pip install -r ml/re
   models from a small single-rater dataset; accuracy improves with more diverse capture.
 - The fruit **detector is trained on [LaboroTomato] (CC BY-NC-SA 4.0 — non-commercial)**;
   any redistribution of those weights inherits that license. Research/portfolio use only.
+- **Classifier training data:** the shape/rating models were trained on my own photos of
+  grocery-store tomatoes I bought myself. No proprietary or employer germplasm, data, or
+  imagery is used anywhere in this project.
 - Built with substantial **AI pair-programming (Claude Code)** as a tool; the
   architecture decisions, domain framing, and debugging were human-directed.
 
