@@ -2,6 +2,7 @@ import Vision
 import CoreML
 import CoreGraphics
 import Accelerate
+import os
 
 /// One tomato instance from the segmentation model.
 /// `rect` and `mask` are both in **image-normalized** space (top-left origin,
@@ -15,6 +16,7 @@ struct TomatoInstance {
 
 /// Decodes YOLOv8-seg Core ML output (raw multiarrays) into per-fruit instances.
 final class TomatoDetector {
+    private static let log = Logger(subsystem: "com.fruitform.app", category: "TomatoDetector")
     private let vnModel: VNCoreMLModel?
     var confidenceThreshold: Float = 0.50
     var iouThreshold: Float = 0.45
@@ -46,16 +48,26 @@ final class TomatoDetector {
         do { try handler.perform([request]) } catch { return [] }
 
         guard let results = request.results as? [VNCoreMLFeatureValueObservation] else { return [] }
+
+        // Select the two outputs by tensor shape rather than export name: the
+        // detection grid is rank-3 ([1, 37, 8400]); the mask prototypes are
+        // rank-4 ([1, 32, 160, 160]). Re-exporting the model renames the
+        // tensors (var_1010 / var_1048) but never changes their dimensionality,
+        // so matching on rank survives a re-export that hardcoded names wouldn't.
         var detArr: MLMultiArray?     // [1, 37, 8400]  boxes + class + 32 mask coeffs
         var protoArr: MLMultiArray?   // [1, 32, 160, 160] mask prototypes
         for res in results {
-            switch res.featureName {
-            case "var_1010": detArr = res.featureValue.multiArrayValue
-            case "var_1048": protoArr = res.featureValue.multiArrayValue
+            guard let arr = res.featureValue.multiArrayValue else { continue }
+            switch arr.shape.count {
+            case 3: detArr = arr
+            case 4: protoArr = arr
             default: break
             }
         }
-        guard let det = detArr, let proto = protoArr else { return [] }
+        guard let det = detArr, let proto = protoArr else {
+            Self.log.error("Detector outputs not identifiable by shape (expected a rank-3 detection grid and a rank-4 prototype tensor); returning no detections.")
+            return []
+        }
 
         // The image is letterboxed into the 640² canvas — these params undo it.
         let lb = Letterbox(imageW: cgImage.width, imageH: cgImage.height)

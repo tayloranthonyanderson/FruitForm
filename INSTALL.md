@@ -34,9 +34,9 @@ Then in Xcode:
 6. **Sign with your team:** select the **FruitForm** target → **Signing &
    Capabilities** → check **Automatically manage signing** → choose **your** team
    in the **Team** dropdown.
-   > The repo hard-codes the original author's Team ID. Step 6 overrides it for
-   > your build. To make it permanent, set `DEVELOPMENT_TEAM` in `project.yml` to
-   > your own 10-character Team ID and re-run `xcodegen generate`.
+   > `DEVELOPMENT_TEAM` in `project.yml` ships empty — you set your own 10-character
+   > Team ID for device builds, then re-run `xcodegen generate` (or just pick your
+   > team in Step 6). Simulator builds — what CI runs — need no signing team.
 7. **Connect your iPhone**, unlock it, tap **Trust** on the phone, and pick it as
    the run destination in the top bar.
 8. Press **⌘R** to build & run.

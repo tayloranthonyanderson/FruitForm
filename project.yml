@@ -10,7 +10,7 @@ settings:
     MARKETING_VERSION: "0.1.0"
     CURRENT_PROJECT_VERSION: "1"
     SWIFT_VERSION: "5.0"
-    DEVELOPMENT_TEAM: "49VHPYJQTL" # CHANGE ME to your own Apple Developer Team ID, then `xcodegen generate`
+    DEVELOPMENT_TEAM: "" # set to your own Apple Developer Team ID for device builds, then `xcodegen generate`
     CODE_SIGN_STYLE: Automatic
     GENERATE_INFOPLIST_FILE: NO
 
