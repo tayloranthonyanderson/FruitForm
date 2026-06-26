@@ -45,8 +45,8 @@ Then in Xcode:
    Re-open the app.
 10. **Allow camera access** when prompted.
 
-The trained models (`TomatoSegmenter`, `TomatoShapeNet`) are already in the repo,
-so there's nothing else to download for the app to work.
+All three trained models (`TomatoSegmenter`, `TomatoShapeNet`, `TomatoRatingNet`)
+are already in the repo, so there's nothing else to download for the app to work.
 
 ## Two common first-time snags
 

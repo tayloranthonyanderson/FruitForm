@@ -4,7 +4,8 @@
 
 **An offline iPhone app that turns a pile of tomatoes into per-fruit shape & size data** —
 shape class, a 1–9 shape-quality rating, size (cm), volume, weight, eccentricity,
-flatness, and color — using the LiDAR depth camera and two on-device neural nets. No
+flatness, and color — using the LiDAR depth camera and three on-device neural nets (a
+detector plus two classifiers). No
 cloud, no scale card. A personal side project exploring on-device computer vision and
 LiDAR depth measurement.
 
@@ -14,8 +15,8 @@ LiDAR depth measurement.
 
 ![FruitForm detecting and grading a tray of tomatoes](docs/demo.jpg)
 
-*Live output: every fruit is segmented, then classified for shape and graded 1–9, while
-LiDAR measures absolute size — all on-device.*
+*A single example tray, captured on-device: each fruit is segmented, then run through the
+shape and rating classifiers while LiDAR measures absolute size — all on-device.*
 
 ## The interesting problem
 
@@ -30,7 +31,7 @@ round globe both "round." This viewpoint constraint drives the whole design:
 - **LiDAR recovers the missing axis** — depth gives true size and a `flatness` metric the
   silhouette can't see.
 
-## How it works — a two-model pipeline
+## How it works — a detector + two classifiers (three on-device models)
 
 ```
 Photo (12 MP) ─► Segmenter (YOLOv8-seg, Core ML) ──► box + mask per fruit
@@ -39,7 +40,8 @@ Photo (12 MP) ─► Segmenter (YOLOv8-seg, Core ML) ──► box + mask per fr
                      └─ box + mask + LiDAR depth + intrinsics ─► size · volume · weight · flatness · color
 ```
 
-Two small models run **sequentially on-device** (Core ML / Vision / the Neural Engine).
+Three small models — one detector and two classifiers (shape + rating) — run
+**sequentially on-device** (Core ML / Vision / the Neural Engine).
 Keeping detection and classification separate means shape can improve from more *shape*
 labels without ever retraining detection. The detector even doubles as the tool that
 chops labeled group photos into per-fruit crops to *build* the classifier's training set.
@@ -123,6 +125,7 @@ python3 -m venv ml/.venv && source ml/.venv/bin/activate && pip install -r ml/re
   models from a small single-rater dataset; accuracy improves with more diverse capture.
 - The fruit **detector is trained on [LaboroTomato] (CC BY-NC-SA 4.0 — non-commercial)**;
   any redistribution of those weights inherits that license. Research/portfolio use only.
+  See [NOTICE.md](NOTICE.md) for the full source-code (MIT) vs. bundled-model licensing split.
 - **Classifier training data:** the shape/rating models were trained on my own photos of
   grocery-store tomatoes I bought myself. No proprietary or employer germplasm, data, or
   imagery is used anywhere in this project.
