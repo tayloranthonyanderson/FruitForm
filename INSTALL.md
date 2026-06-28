@@ -1,14 +1,14 @@
 # Installing FruitForm on your iPhone
 
-This covers getting the **app** running on a device. (The Python/ML pipeline is
+This covers getting the app running on a device. (The Python/ML pipeline is
 optional and only needed for retraining — see the README.)
 
 ## Prerequisites
 
-- **A Mac** with **Xcode 26+** (Xcode is macOS-only).
-- **A LiDAR iPhone** — iPhone 12 Pro or any newer **Pro** model — on **iOS 17+**.
+- A Mac with Xcode 26+ (Xcode is macOS-only).
+- A LiDAR iPhone — iPhone 12 Pro or any newer Pro model — on iOS 17+.
   Size, volume, and flatness all come from LiDAR; non-Pro phones won't measure.
-- **An Apple ID.** A *free* one works for installing to your own device — no paid
+- An Apple ID. A *free* one works for installing to your own device — no paid
   Apple Developer account required.
 
 ## Steps
@@ -32,7 +32,7 @@ Then in Xcode:
 
 5. **Add your Apple ID:** Xcode → **Settings → Accounts → +** → sign in (free is fine).
 6. **Sign with your team:** select the **FruitForm** target → **Signing &
-   Capabilities** → check **Automatically manage signing** → choose **your** team
+   Capabilities** → check **Automatically manage signing** → choose your team
    in the **Team** dropdown.
    > `DEVELOPMENT_TEAM` in `project.yml` ships empty — you set your own 10-character
    > Team ID for device builds, then re-run `xcodegen generate` (or just pick your

@@ -74,7 +74,7 @@ page = (f"<html><head><meta charset='utf-8'>{CSS}</head><body>"
 
 # Add a prominent link at the top of index.html (once).
 idx = OUT / "index.html"; t = idx.read_text()
-banner = "<p style='font-size:16px'>👉 <a href='samples.html'><b>Sample collage — model on unseen fruit</b></a></p>"
+banner = "<p style='font-size:16px'><a href='samples.html'><b>Sample collage — model on unseen fruit</b></a></p>"
 if "samples.html" not in t:
     t = t.replace("</h1>", "</h1>" + banner, 1)
     idx.write_text(t)

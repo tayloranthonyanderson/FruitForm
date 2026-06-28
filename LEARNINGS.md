@@ -5,8 +5,8 @@ this first; several non-obvious decisions will otherwise look wrong.
 
 ## The product
 
-Photograph a pile of processing tomatoes; get per-fruit **shape class, size,
-eccentricity, flatness, volume, weight, color**. Capture is a pile on the ground
+Photograph a pile of processing tomatoes; get per-fruit shape class, size,
+eccentricity, flatness, volume, weight, and color. Capture is a pile on the ground
 in random orientations — not a controlled lightbox. LiDAR is used for scale (no
 physical scale card). Hybrid: on-device first, optional cloud refinement.
 
@@ -16,13 +16,13 @@ A tomato resting on a surface sits **pole-up** (the stem→blossom axis vertical
 because oblate fruit are stable that way. So a top-down photo looks *straight down
 the polar axis*, and the silhouette you get is the **equatorial cross-section**.
 The dimension that separates round from oblate ("flat") from elongated — the polar
-height — points **at the lens** and is invisible in 2D.
+height — points at the lens and is invisible in 2D.
 
 Consequences:
 - A flat beefsteak and a round globe both project a round-ish top. A pure 2D
   silhouette classifier (and even a generic cloud vision model) calls both
   "round." This is a *viewpoint* limit, not a model bug.
-- You do **not** need stem-end detection to classify shape. But you **do** need
+- You do not need stem-end detection to classify shape. But you do need
   the polar axis to be *recoverable* — either seen side-on, or via 3D/LiDAR.
 - Fixes used: (1) LiDAR `flatness` (`FruitForm3D`) recovers the missing axis and
   upgrades round-but-flat fruit to "flat"; (2) a classifier trained on *your*
@@ -36,16 +36,16 @@ Consequences:
   public LaboroTomato set; general to any tomato.
 - **Shape classifier** (`TomatoShapeNet`, YOLOv8-cls): *what shape*, on a single
   fruit crop. Trained on the user's labels.
-- They run **sequentially**. Keeping them separate means you can improve shape
+- They run sequentially. Keeping them separate means you can improve shape
   by collecting more *shape* labels without ever retraining detection, and the
-  detector stays general. Neat trick: the detector is what chops the labeled
-  group photos into per-fruit crops to *build* the classifier's training set.
+  detector stays general. The detector also chops the labeled group photos
+  into per-fruit crops to *build* the classifier's training set.
 
 ## Measurement
 
 - Size from LiDAR depth × silhouette extent and camera intrinsics (`fx,fy`).
   `~±1 cm`. Shape ratios (`shape_index`, `eccentricity`) are depth-independent.
-- `flatness = LiDAR cap-height ÷ equatorial radius` — **provisional**: a single
+- `flatness = LiDAR cap-height ÷ equatorial radius` — provisional: a single
   top-down view sees only the top cap, so it's a partial estimate. Good enough to
   *flag* clearly flat fruit; calibrate vs calipers before trusting the number.
 - Volume = ellipsoid from mask area + depth shell; weight = volume × ~0.98 g/cm³.
@@ -109,7 +109,7 @@ durable fix and isn't built yet.
 - **Codable + new manifest fields:** Swift's synthesized `Decodable` does NOT honor
   a property's default value for a missing key — it throws `keyNotFound`. Adding a
   non-optional `mode` to `TrainingSample` made the app fail to load every old
-  manifest entry (then overwrite it). Make new manifest fields **Optional** so old
+  manifest entry (then overwrite it). Make new manifest fields Optional so old
   records decode (missing key → nil). See `TrainingSample.mode`.
 - **Capture resolution:** ARKit's live frame is only 1920×1440 (2.8 MP). For a
   zoomable archive + sharp classifier crops, set

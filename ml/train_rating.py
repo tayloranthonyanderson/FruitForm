@@ -13,7 +13,7 @@ import sys
 
 HERE = Path(__file__).parent
 DATA = str(HERE / "rating_ds_bal")
-DEV = sys.argv[1] if len(sys.argv) > 1 else "mps"   # cls uses plain CE — MPS is fine
+DEV = sys.argv[1] if len(sys.argv) > 1 else "mps"   # rating is plain CE — MPS is fine
 
 model = YOLO("yolov8n-cls.pt")
 model.train(

@@ -2,7 +2,7 @@
 
 [![CI](https://github.com/tayloranthonyanderson/FruitForm/actions/workflows/ci.yml/badge.svg)](https://github.com/tayloranthonyanderson/FruitForm/actions/workflows/ci.yml)
 
-**An offline iPhone app that turns a pile of tomatoes into per-fruit shape & size data** —
+An offline iPhone app that turns a pile of tomatoes into per-fruit shape & size data —
 shape class, a 1–9 shape-quality rating, size (cm), volume, weight, eccentricity,
 flatness, and color — using the LiDAR depth camera and three on-device neural nets (a
 detector plus two classifiers). No
@@ -18,19 +18,6 @@ LiDAR depth measurement.
 *A single example tray, captured on-device: each fruit is segmented, then run through the
 shape and rating classifiers while LiDAR measures absolute size — all on-device.*
 
-## The interesting problem
-
-Tomatoes rest **pole-up**, so a top-down photo only sees the fruit's **equatorial
-cross-section**. The dimension that actually separates a flat, round, and elongated
-fruit — the polar height — points straight at the lens and is **invisible in 2D**. A
-plain 2D classifier (and even a general cloud vision model) calls a flat beefsteak and a
-round globe both "round." This viewpoint constraint drives the whole design:
-
-- A classifier trained on your *own* top-down photos learns the human-visible
-  cues (blossom-end scar, lobing) that correlate with shape from above.
-- **LiDAR recovers the missing axis** — depth gives true size and a `flatness` metric the
-  silhouette can't see.
-
 ## How it works — a detector + two classifiers (three on-device models)
 
 ```
@@ -41,7 +28,7 @@ Photo (12 MP) ─► Segmenter (YOLOv8-seg, Core ML) ──► box + mask per fr
 ```
 
 Three small models — one detector and two classifiers (shape + rating) — run
-**sequentially on-device** (Core ML / Vision / the Neural Engine).
+sequentially on-device (Core ML / Vision / the Neural Engine).
 Keeping detection and classification separate means shape can improve from more *shape*
 labels without ever retraining detection. The detector even doubles as the tool that
 chops labeled group photos into per-fruit crops to *build* the classifier's training set.
@@ -89,7 +76,7 @@ the vision code.
 
 ## Build & run
 
-Requires **Xcode 26+**, **[XcodeGen]**, and a **LiDAR iPhone** (12 Pro or newer Pro, iOS 17+).
+Requires Xcode 26+, [XcodeGen], and a LiDAR iPhone (12 Pro or newer Pro, iOS 17+).
 
 ```bash
 brew install xcodegen
@@ -97,7 +84,7 @@ xcodegen generate            # generates FruitForm.xcodeproj from project.yml
 open FruitForm.xcodeproj # set your own signing team, pick your iPhone, ⌘R
 ```
 
-Full walkthrough: **[INSTALL.md](INSTALL.md)**. Run the tests with:
+Full walkthrough: [INSTALL.md](INSTALL.md). Run the tests with:
 
 ```bash
 xcodebuild test -scheme FruitForm -destination 'platform=iOS Simulator,name=iPhone 16'
@@ -127,7 +114,7 @@ python3 -m venv ml/.venv && source ml/.venv/bin/activate && pip install -r ml/re
 - **Shape v2 = 4 classes**, **rating = odd anchors 1/3/5/7/9** so far — proof-of-concept
   models from a small single-rater dataset; accuracy improves with more diverse capture.
 - The fruit **detector is trained on [LaboroTomato] (CC BY-NC-SA 4.0 — non-commercial)**;
-  any redistribution of those weights inherits that license. Research/portfolio use only.
+  any redistribution of those weights inherits that license. Research/personal use only.
   See [NOTICE.md](NOTICE.md) for the full source-code (MIT) vs. bundled-model licensing split.
 - **Classifier training data:** the shape/rating models were trained on my own photos of
   grocery-store tomatoes I bought myself. No proprietary or employer germplasm, data, or

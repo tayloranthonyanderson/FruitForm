@@ -35,7 +35,7 @@ used in these models.
 
 Because the bundled detector weights carry a **NonCommercial** license, the
 repository **as a whole** (with the committed models) is intended for
-**research / portfolio / non-commercial use only**.
+**research / personal / non-commercial use only**.
 
 The MIT-licensed **source code itself** may still be reused under the MIT License
 — the NonCommercial restriction applies to the bundled detector weights, not to
