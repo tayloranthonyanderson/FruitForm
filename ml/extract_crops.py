@@ -36,7 +36,7 @@ else:  # shape_rating
     CLASSES = [str(i) for i in range(1, 10)]           # "1".."9"
     OUT = Path(__file__).parent / "rating_ds"
 CONF = 0.50          # match the app's detector; high precision = clean crops
-PAD = 0.06           # same pad as the app's cloud-crop
+PAD = 0.06           # same pad as the app's classifier crop
 VAL_FRAC = 0.15
 MIN_PX = 24
 

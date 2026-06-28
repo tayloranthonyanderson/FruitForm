@@ -2,12 +2,11 @@
 
 [![CI](https://github.com/tayloranthonyanderson/FruitForm/actions/workflows/ci.yml/badge.svg)](https://github.com/tayloranthonyanderson/FruitForm/actions/workflows/ci.yml)
 
-An offline iPhone app that turns a pile of tomatoes into per-fruit shape & size data —
+An iPhone app that turns a pile of tomatoes into per-fruit shape & size data —
 shape class, a 1–9 shape-quality rating, size (cm), volume, weight, eccentricity,
 flatness, and color — using the LiDAR depth camera and three on-device neural nets (a
-detector plus two classifiers). No
-cloud, no scale card. A personal side project exploring on-device computer vision and
-LiDAR depth measurement.
+detector plus two classifiers). Runs fully offline by default; no scale card. A personal
+side project exploring on-device computer vision and LiDAR depth measurement.
 
 > *Personal project, built on my own time and equipment using publicly available or
 > self-collected data. Not affiliated with, funded by, or derived from any employer's
@@ -33,9 +32,14 @@ Keeping detection and classification separate means shape can improve from more 
 labels without ever retraining detection. The detector even doubles as the tool that
 chops labeled group photos into per-fruit crops to *build* the classifier's training set.
 
+Everything above runs on-device. An optional cloud step — the Anthropic API, **off by
+default** (enable it and add your own key in Settings) — can second-guess the shape call on
+ambiguous fruit; results that used it are tagged `device+cloud`. See
+[`FruitForm/Cloud/`](FruitForm/Cloud/).
+
 ## Engineering highlights
 
-A few problems that were more interesting than the feature list:
+A few problems worth calling out:
 
 - **A train/serve skew that looked like a model failure.** On-device, every fruit came
   back "flat/fasciated, rating 9" at high confidence — yet every offline test on the same
@@ -63,7 +67,7 @@ the vision code.
 
 ## Tech stack
 
-- **App:** Swift, SwiftUI, ARKit + RealityKit/SceneKit, Core ML, Vision, Accelerate.
+- **App:** Swift, SwiftUI, ARKit, SceneKit, Core ML, Vision, Accelerate.
 - **ML:** Python, Ultralytics YOLOv8 (seg + cls), PyTorch, Core ML Tools; trained on
   device-collected data with leak-free grouped train/val splits.
 - **Tooling:** XcodeGen (project generated from `project.yml`), XCTest, GitHub Actions CI.
@@ -119,8 +123,6 @@ python3 -m venv ml/.venv && source ml/.venv/bin/activate && pip install -r ml/re
 - **Classifier training data:** the shape/rating models were trained on my own photos of
   grocery-store tomatoes I bought myself. No proprietary or employer germplasm, data, or
   imagery is used anywhere in this project.
-- Built with substantial **AI pair-programming (Claude Code)** as a tool; the
-  architecture decisions, domain framing, and debugging were human-directed.
 
 [XcodeGen]: https://github.com/yonaskolb/XcodeGen
 [LaboroTomato]: https://github.com/laboroai/LaboroTomato
