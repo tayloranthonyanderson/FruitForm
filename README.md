@@ -37,30 +37,6 @@ default** (enable it and add your own key in Settings) — can second-guess the 
 ambiguous fruit; results that used it are tagged `device+cloud`. See
 [`FruitForm/Cloud/`](FruitForm/Cloud/).
 
-## Engineering highlights
-
-A few problems worth calling out:
-
-- **A train/serve skew that looked like a model failure.** On-device, every fruit came
-  back "flat/fasciated, rating 9" at high confidence — yet every offline test on the same
-  photos was correct. The crop fed to the classifier padded by a fraction of the **image**
-  (~115 px) instead of the **box** (~7 px), burying each fruit in background: the model was
-  fine, the *input framing* didn't match training. Fixed by collapsing crop math to one
-  helper ([`CropGeometry`](FruitForm/Vision/CropGeometry.swift)) and pinning it with a
-  [regression test](Tests/CropGeometryTests.swift) that asserts the pad is box-relative —
-  the exact value at the shared train/serve boundary, so the skew can't silently return.
-- **Leak-free evaluation.** Multiple fruit share one photo, so a naive train/val split
-  leaks near-duplicates across the boundary and inflates accuracy. The split is
-  **grouped by source photo** — no photo's fruit straddle train and val — so the reported
-  numbers reflect generalization, not memorized backgrounds (see [LEARNINGS.md](LEARNINGS.md)).
-- **A silent `Decodable` default-value trap.** Adding a new `mode` field made the app fail
-  to load *every* existing capture: Swift's synthesized `Decodable` throws on a missing key
-  **even when the property has a default**. The default never applies to absent JSON keys.
-  Fix: new manifest fields are `Optional`.
-- **Capture resolution.** ARKit's live frame is only 2.8 MP; switching to
-  `captureHighResolutionFrame` (12 MP) sharpened both the archive and the classifier
-  crops while keeping LiDAR depth intact.
-
 [LEARNINGS.md](LEARNINGS.md) documents the *why* behind the non-obvious decisions and the
 gotchas (coordinate frames, Core ML name collisions, MPS quirks). Read it before changing
 the vision code.
